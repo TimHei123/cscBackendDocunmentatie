@@ -19,9 +19,8 @@ mkdir -p certbot/www
 mkdir -p docs
 
 # Copy documentation files
-cp ../go/docs/API_Documentatie.pdf docs/
-cp ../go/docs/static/api.html docs/
-cp ../go/swagger.yaml ./
+
+cp ./swagger.yaml ./
 
 # Replace domain name in nginx.conf
 read -p "Enter your domain name (e.g., api.example.com): " domain
