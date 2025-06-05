@@ -1,44 +1,54 @@
 #!/bin/bash
 set -e
 
-# Define variables
 DOMAIN="timonheidenreich.nl"
-EMAIL="timon@timonheidenreich.eu"   # Replace with your email
-WEBROOT="./certbot/www"          # Path mapped in docker-compose for /.well-known/acme-challenge
+EMAIL="your-email@example.com"  # Change to your email for certbot notifications
 
-echo "Starting setup for domain: $DOMAIN"
+# Check for Docker
+if ! command -v docker &>/dev/null; then
+  echo "Docker not found. Installing Docker..."
+  apt-get update
+  apt-get install -y docker.io
+fi
 
-# Step 1: Create necessary directories
-echo "Creating directories for certbot webroot and config..."
-mkdir -p "$WEBROOT"
-mkdir -p ./certbot/conf
+# Check for Docker Compose
+if ! command -v docker-compose &>/dev/null; then
+  echo "docker-compose not found. Installing docker-compose..."
+  curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  chmod +x /usr/local/bin/docker-compose
+fi
 
-# Step 2: Create dummy test file for ACME challenge (optional, just to test nginx serving)
-echo "Creating dummy ACME challenge test file..."
-echo "testfile" > "$WEBROOT/testfile"
+# Create necessary directories if not exist
+mkdir -p certbot/www/.well-known/acme-challenge
+mkdir -p certbot/conf
+mkdir -p swagger
 
-# Step 3: Start docker containers in detached mode
-echo "Starting Docker Compose services..."
+# Check swagger.yaml presence
+if [ ! -f "./swagger/swagger.yaml" ]; then
+  echo "Please place your swagger.yaml inside ./swagger directory."
+  exit 1
+fi
+
+echo "Starting Docker containers..."
 docker-compose up -d
 
-# Step 4: Wait for nginx to be up and serving
-echo "Waiting for nginx to be ready on port 80..."
-until curl -s http://$DOMAIN/.well-known/acme-challenge/testfile | grep -q "testfile"; do
-  echo "Waiting for nginx to serve the ACME challenge file..."
-  sleep 3
-done
-echo "Nginx is serving challenge files correctly."
+echo "Waiting for Nginx container to be ready..."
+sleep 5
 
-# Step 5: Remove the dummy test file (optional cleanup)
-rm "$WEBROOT/testfile"
+echo "Creating a test file for Let's Encrypt challenge..."
+mkdir -p certbot/www/.well-known/acme-challenge
+echo "letsencrypt-test" > certbot/www/.well-known/acme-challenge/testfile
 
-# Step 6: Run certbot to obtain or renew certificates
-echo "Running certbot to obtain SSL certificates..."
-docker-compose run --rm certbot certonly --webroot -w /var/www/certbot --email "$EMAIL" -d "$DOMAIN" --agree-tos --no-eff-email --force-renewal
+echo "Verifying HTTP access to test file..."
+curl --fail http://$DOMAIN/.well-known/acme-challenge/testfile
 
-# Step 7: Reload nginx to apply new certificates
-echo "Reloading nginx to apply SSL certificates..."
-docker-compose exec nginx nginx -s reload
+echo "Requesting Let's Encrypt certificate (this might take a moment)..."
+docker-compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN --email $EMAIL --agree-tos --no-eff-email
 
-echo "Setup complete. Your site should now have a valid SSL certificate."
+echo "Certificates obtained. Restarting nginx..."
+docker-compose restart nginx
 
+echo "Cleaning up test file..."
+rm certbot/www/.well-known/acme-challenge/testfile
+
+echo "Setup complete! Your site should be available at https://$DOMAIN/csc-self-servics/api-docs/"
