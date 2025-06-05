@@ -1,0 +1,39 @@
+version: '3'
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    restart: always
+    environment:
+      - SWAGGER_JSON=/api/swagger.yaml
+    volumes:
+      - ./swagger.yaml:/api/swagger.yaml
+    networks:
+      - api-network
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"  # For HTTPS
+    volumes:
+      - ./docs:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/conf:/etc/letsencrypt  # For SSL certificates
+      - ./certbot/www:/var/www/certbot   # For SSL certificate validation
+    depends_on:
+      - swagger-ui
+    networks:
+      - api-network
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+  api-network:
+    driver: bridge 
