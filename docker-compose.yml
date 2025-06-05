@@ -23,18 +23,6 @@ services:
       /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;"
     restart: unless-stopped
 
-  # OPTIONAL one-time container to get the initial cert (comment after first run)
-  certbot-init:
-    image: certbot/certbot
-    container_name: certbot-init
-    depends_on:
-      - nginx
-    command: certonly --webroot --webroot-path=/var/www/certbot --email timon@timonheidenreich.eu --agree-tos --no-eff-email -d timonheidenreich.nl
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    restart: "no"
-
   swagger-ui:
     image: swaggerapi/swagger-ui
     container_name: swagger-ui
