@@ -1,40 +1,44 @@
 #!/bin/bash
 set -e
 
-# Check for local development mode
-read -p "Is this a local development setup? (y/n): " is_local
-if [ "$is_local" = "y" ]; then
-    echo "Starting local development setup..."
-    docker-compose up --build
-    echo "Swagger UI is available at: http://localhost:8081"
-    exit 0
-fi
+# Define variables
+DOMAIN="timonheidenreich.nl"
+EMAIL="timon@timonheidenreich.eu"   # Replace with your email
+WEBROOT="./certbot/www"          # Path mapped in docker-compose for /.well-known/acme-challenge
 
-echo "Starting production setup..."
+echo "Starting setup for domain: $DOMAIN"
 
-# Create necessary directories if they don't exist
-mkdir -p certbot/conf certbot/www docs
+# Step 1: Create necessary directories
+echo "Creating directories for certbot webroot and config..."
+mkdir -p "$WEBROOT"
+mkdir -p ./certbot/conf
 
-# Read domain and email
-read -p "Enter your domain name (e.g., api.example.com): " domain
-read -p "Enter your email for SSL certificate: " email
+# Step 2: Create dummy test file for ACME challenge (optional, just to test nginx serving)
+echo "Creating dummy ACME challenge test file..."
+echo "testfile" > "$WEBROOT/testfile"
 
-# Replace domain in nginx.conf
-sed -i "s/your-domain.com/$domain/g" nginx.conf
+# Step 3: Start docker containers in detached mode
+echo "Starting Docker Compose services..."
+docker-compose up -d
 
-echo "Starting Nginx without SSL..."
-docker-compose up --force-recreate -d nginx
+# Step 4: Wait for nginx to be up and serving
+echo "Waiting for nginx to be ready on port 80..."
+until curl -s http://$DOMAIN/.well-known/acme-challenge/testfile | grep -q "testfile"; do
+  echo "Waiting for nginx to serve the ACME challenge file..."
+  sleep 3
+done
+echo "Nginx is serving challenge files correctly."
 
-echo "Requesting SSL certificate from Let's Encrypt..."
-docker-compose run --rm certbot certonly --webroot -w /var/www/certbot -d "$domain" --email "$email" --agree-tos --no-eff-email
+# Step 5: Remove the dummy test file (optional cleanup)
+rm "$WEBROOT/testfile"
 
-echo "Enabling SSL in nginx.conf..."
-# Uncomment SSL server block (lines between "# SSL server block" comments)
-sed -i '/# SSL server block/,/#}/ s/^#//' nginx.conf
+# Step 6: Run certbot to obtain or renew certificates
+echo "Running certbot to obtain SSL certificates..."
+docker-compose run --rm certbot certonly --webroot -w /var/www/certbot --email "$EMAIL" -d "$DOMAIN" --agree-tos --no-eff-email --force-renewal
 
-echo "Restarting Nginx with SSL enabled..."
-docker-compose restart nginx
+# Step 7: Reload nginx to apply new certificates
+echo "Reloading nginx to apply SSL certificates..."
+docker-compose exec nginx nginx -s reload
 
-echo "Setup complete! Your documentation should be available at:"
-echo "https://$domain/"
-echo "https://$domain/swagger/"
+echo "Setup complete. Your site should now have a valid SSL certificate."
+
