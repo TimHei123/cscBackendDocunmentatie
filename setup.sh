@@ -18,10 +18,6 @@ mkdir -p certbot/conf
 mkdir -p certbot/www
 mkdir -p docs
 
-# Copy documentation files
-
-cp ./swagger.yaml ./
-
 # Replace domain name in nginx.conf
 read -p "Enter your domain name (e.g., api.example.com): " domain
 sed -i "s/your-domain.com/$domain/g" nginx.conf
@@ -38,4 +34,4 @@ docker-compose restart nginx
 
 echo "Setup complete! Your documentation should be available at:"
 echo "https://$domain/"
-echo "https://$domain/swagger/" 
+echo "https://$domain/swagger/"
