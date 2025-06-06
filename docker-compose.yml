@@ -29,7 +29,7 @@ services:
       - api-network
 
   swagger-ui:
-    image: swaggerapi/swagger-ui
+    image: swaggerapi/swagger-ui:v4.15.5
     container_name: swagger-ui
     ports:
       - "8081:8080"
