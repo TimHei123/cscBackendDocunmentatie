@@ -30,7 +30,7 @@ services:
       SWAGGER_JSON_URL: /swagger.yaml
       BASE_URL: /
     volumes:
-      - ./swagger:/swagger
+      - /swagger:/swagger
     ports:
       - "8080:8080"
     restart: unless-stopped
