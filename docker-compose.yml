@@ -34,10 +34,10 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - SWAGGER_JSON=/csc-self-servics/api-docs/swagger.yaml # <-- IMPORTANT: New internal path for SWAGGER_JSON
-      # Remove the 'URL' environment variable
+      - SWAGGER_JSON=/swagger.yaml # Path inside the container for the spec (after Nginx rewrite)
+      - BASE_URL=/csc-self-servics/api-docs/ # Public base URL for Swagger UI to correctly resolve assets
     volumes:
-      - ./swagger/swagger.yaml:/csc-self-servics/api-docs/swagger.yaml # <-- IMPORTANT: Mount to the new internal path
+      - ./swagger/swagger.yaml:/swagger.yaml # Mount to the root of the container
     networks:
       - api-network
 
