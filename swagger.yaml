@@ -15,22 +15,15 @@ info:
     De API gebruikt standaard HTTP statuscodes en retourneert foutmeldingen in JSON-formaat.
 
     ## Contact
-    <div class="contact-info">
-      <p>Voor ondersteuning of vragen:</p>
-      <ul>
-        <li>Email: <a href="mailto:timon@timonheidenreich.eu">Stuur een Email</a></li>
-        <br>
-        <br>
-        <li>Discord: <a href="https://discord.com/users/760123997475700756" target="_blank">Stuur een Bericht (Ik heb meldingen uitgeschakeld voor Discord)</a></li>
-        <br>
-        <br>
-        <li>Berichten: <a href="sms://timon@timonheidenreich.eu">Stuur een Bericht (alleen voor iOS gebruikers)</a></li>
-      </ul>
-    </div>
+    Voor ondersteuning of vragen:
+    - Email: [timon@timonheidenreich.eu](mailto:timon@timonheidenreich.eu)
+    - Discord: [Stuur een Bericht](https://discord.com/users/760123997475700756)
+    - iMessage/SMS: `timon@timonheidenreich.eu` (alleen voor iOS gebruikers)
 
   version: 1.0.0
   contact:
     name: CSC Support Team
+
 servers:
   - url: https://api.dev.ikwileenserver.open-ict.hu
     description: dev server
@@ -53,46 +46,34 @@ components:
       properties:
         email:
           type: string
-          description: E-mailadres van de gebruiker
         student_id:
           type: integer
-          description: Studentnummer
         home_ip:
           type: string
-          description: Thuis IP-adres
     LoginRequest:
       type: object
       properties:
         username:
           type: string
-          description: Gebruikersnaam
         password:
           type: string
-          description: Wachtwoord
     CreateServerRequest:
       type: object
       properties:
         name:
           type: string
-          description: Naam van de virtuele machine
         memory:
           type: integer
-          description: Hoeveelheid geheugen in MB
         cores:
           type: integer
-          description: Aantal CPU cores
         DiskSize:
           type: integer
-          description: Grootte van de harde schijf in GB
         description:
           type: string
-          description: Beschrijving van de server
         os:
           type: string
-          description: Geselecteerd besturingssysteem
         subdomain:
           type: string
-          description: Subdomain voor de server
 
 paths:
   /auth/login:
@@ -106,17 +87,7 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  description: Gebruikersnaam
-                password:
-                  type: string
-                  description: Wachtwoord
-              required:
-                - username
-                - password
+              $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
           description: Succesvol ingelogd
@@ -159,13 +130,6 @@ paths:
         - bearerAuth: []
       tags:
         - Gebruikers
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token voor authenticatie
       responses:
         "200":
           description: Gebruikersinformatie succesvol opgehaald
@@ -184,13 +148,6 @@ paths:
         - bearerAuth: []
       tags:
         - Gebruikers
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token voor authenticatie
       requestBody:
         required: true
         content:
@@ -212,12 +169,6 @@ paths:
       tags:
         - Virtuele Machines
       parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token voor authenticatie
         - name: hypervisor
           in: path
           required: true
@@ -241,12 +192,6 @@ paths:
       tags:
         - Virtuele Machines
       parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token voor authenticatie
         - name: hypervisor
           in: path
           required: true
@@ -268,12 +213,6 @@ paths:
       tags:
         - Virtuele Machines
       parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token voor authenticatie
         - name: hypervisor
           in: path
           required: true
@@ -301,12 +240,6 @@ paths:
       tags:
         - Virtuele Machines
       parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token voor authenticatie
         - name: hypervisor
           in: path
           required: true
