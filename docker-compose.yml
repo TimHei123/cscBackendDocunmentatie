@@ -33,11 +33,12 @@ services:
     container_name: swagger-ui
     ports:
       - "8081:8080"
-    environment:
-      - SWAGGER_JSON=/swagger.yaml # Path inside the container for the spec (after Nginx rewrite)
-      - BASE_URL=/csc-self-servics/api-docs/ # Public base URL for Swagger UI to correctly resolve assets
-    volumes:
-      - ./swagger/swagger.yaml:/swagger.yaml # Mount to the root of the container
+    # Temporarily remove environment variables and volumes
+    # environment:
+    #   - SWAGGER_JSON=/swagger.yaml
+    #   - BASE_URL=/csc-self-servics/api-docs/
+    # volumes:
+    #   - ./swagger/swagger.yaml:/swagger.yaml
     networks:
       - api-network
 
