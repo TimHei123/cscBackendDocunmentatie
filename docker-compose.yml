@@ -2,7 +2,7 @@ version: '3'
 services:
   nginx:
     image: nginx:alpine
-    container_name: cscbackenddocunmentatie-nginx
+    container_name: cscbackenddocumentatie-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -18,7 +18,7 @@ services:
 
   certbot:
     image: certbot/certbot
-    container_name: cscbackenddocunmentatie-certbot
+    container_name: cscbackenddocumentatie-certbot
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
@@ -34,7 +34,7 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - SWAGGER_JSON=/csc-self-servics/api-docs/swagger.yaml
+      - SWAGGER_JSON=/swagger.yaml
     volumes:
       - ./swagger/swagger.yaml:/usr/share/nginx/html/swagger.yaml
     networks:
