@@ -32,9 +32,8 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - BASE_URL=/
       - SWAGGER_JSON=/api/swagger.yaml
-      - URL=swagger.yaml
+      - BASE_URL=/csc-self-servics/api-docs
     volumes:
       - ./swagger.yaml:/api/swagger.yaml
     networks:
