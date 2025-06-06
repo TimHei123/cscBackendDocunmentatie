@@ -27,10 +27,9 @@ services:
     image: swaggerapi/swagger-ui
     container_name: swagger-ui
     environment:
-      SWAGGER_JSON_URL: /swagger.yaml
-      BASE_URL: /
+      SWAGGER_JSON: /swagger.yaml
     volumes:
-      - /swagger:/swagger
+      - ./swagger.yaml:/swagger.yaml
     ports:
       - "8080:8080"
     restart: unless-stopped
