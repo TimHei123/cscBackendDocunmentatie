@@ -30,7 +30,7 @@ services:
       API_URL: swagger.yaml
       URLS: "[{ url: 'swagger.yaml', name: 'CSC Self-Service API' }]"
     volumes:
-      - ./swagger.yaml:/usr/share/nginx/html/swagger.yaml
+      - ./swagger.yaml:/swagger.yaml
     ports:
       - "8080:8080"
     restart: unless-stopped
