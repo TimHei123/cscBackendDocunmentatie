@@ -34,8 +34,8 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - SWAGGER_JSON=/swagger.yaml
-      - BASE_URL=/csc-self-servics/api-docs/ # Add this line
+      # Removed SWAGGER_JSON and BASE_URL
+      - URL=https://timonheidenreich.nl/csc-self-servics/api-docs/swagger.yaml # New line: Explicitly point to the public spec URL
     volumes:
       - ./swagger/swagger.yaml:/swagger.yaml
     networks:
