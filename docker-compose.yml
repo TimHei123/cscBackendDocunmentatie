@@ -12,6 +12,8 @@ services:
     depends_on:
       - swagger-ui
     restart: unless-stopped
+    networks:
+      - api-network
 
   certbot:
     image: certbot/certbot
@@ -22,15 +24,22 @@ services:
     entrypoint: >
       /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done;"
     restart: unless-stopped
+    networks:
+      - api-network
 
   swagger-ui:
     image: swaggerapi/swagger-ui
     container_name: swagger-ui
-    environment:
-      API_URL: swagger.yaml
-      URLS: "[{ url: 'swagger.yaml', name: 'CSC Self-Service API' }]"
-    volumes:
-      - ./swagger.yaml:/swagger.yaml
     ports:
-      - "8080:8080"
+      - "8081:8080"
+    environment:
+      - SWAGGER_JSON=/api/swagger.yaml
+    volumes:
+      - ./swagger.yaml:/api/swagger.yaml
     restart: unless-stopped
+    networks:
+      - api-network
+
+networks:
+  api-network:
+    driver: bridge
