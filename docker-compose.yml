@@ -29,7 +29,7 @@ services:
     environment:
       SWAGGER_JSON: ./swagger/swagger.yaml
     volumes:
-      - /swagger:/swagger
+      - ./swagger:/swagger
     ports:
       - "8080:8080"
     restart: unless-stopped
