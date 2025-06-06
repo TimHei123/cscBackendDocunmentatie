@@ -27,9 +27,10 @@ services:
     image: swaggerapi/swagger-ui
     container_name: swagger-ui
     environment:
-      SWAGGER_JSON: /swagger.yaml
+      API_URL: swagger.yaml
+      URLS: "[{ url: 'swagger.yaml', name: 'CSC Self-Service API' }]"
     volumes:
-      - ./swagger.yaml:/swagger.yaml
+      - ./swagger.yaml:/usr/share/nginx/html/swagger.yaml
     ports:
       - "8080:8080"
     restart: unless-stopped
