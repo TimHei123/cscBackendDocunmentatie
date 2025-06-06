@@ -34,7 +34,7 @@ services:
     environment:
       - BASE_URL=/
       - SWAGGER_JSON=/api/swagger.yaml
-      - URL=/csc-self-servics/api-docs/swagger.yaml
+      - URL=swagger.yaml
     volumes:
       - ./swagger.yaml:/api/swagger.yaml
     networks:
