@@ -118,194 +118,265 @@ paths:
   /auth/login:
     post:
       summary: Inloggen
-      description: Autenticeer de gebruiker en ontvang een JWT-token.
+      description: Authenticeer een gebruiker en genereer een JWT token
+      tags:
+        - Authenticatie
       requestBody:
         required: true
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Gebruikersnaam
+                password:
+                  type: string
+                  description: Wachtwoord
+              required:
+                - username
+                - password
       responses:
-        '200':
-          description: Login successful
-        '400':
-          description: Invalid login request
-        '401':
-          description: Unauthorized – incorrect credentials
-        '500':
-          description: Internal server error
+        "200":
+          description: Succesvol ingelogd
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token voor authenticatie
+        "401":
+          description: Ongeldige inloggegevens
 
   /auth/resetRequest:
     post:
-      summary: Wachtwoord reset aanvragen
-      description: Stuurt een reset-link naar het opgegeven e-mailadres.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ResetRequest'
+      summary: Wachtwoordreset aanvragen
+      description: Vraag een wachtwoordreset aan
+      tags:
+        - Authenticatie
       responses:
-        '200':
-          description: Reset request accepted
-        '500':
-          description: Internal server error
+        "200":
+          description: Reset aanvraag succesvol verzonden
 
   /auth/resetPassword:
     post:
-      summary: Wachtwoord reset uitvoeren
-      description: Wachtwoord resetten met een geldig token.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ResetPasswordRequest'
+      summary: Wachtwoord resetten
+      description: Voer een wachtwoordreset uit
+      tags:
+        - Authenticatie
       responses:
-        '200':
-          description: Password reset successful
-        '400':
-          description: Invalid or expired token
-
-  /api/change-user-info:
-    post:
-      summary: Gebruikersinfo bijwerken
-      description: Werk gegevens zoals e-mail, studentnummer en IP-adres bij.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInfo'
-      responses:
-        '200':
-          description: User info updated
-        '400':
-          description: Invalid input
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
+        "200":
+          description: Wachtwoord succesvol gereset
 
   /api/get-user-info:
     get:
-      summary: Gebruikersinfo ophalen
-      description: Haal profielinformatie van de ingelogde gebruiker op.
+      summary: Gebruikersinformatie ophalen
+      description: Haal de informatie op van de ingelogde gebruiker
       security:
         - bearerAuth: []
-      responses:
-        '200':
-          description: User info retrieved
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
-
-  /api/{hypervisor}/listallvms:
-    get:
-      summary: Alle VMs ophalen (admin)
-      description: Alleen beschikbaar voor beheerders.
-      security:
-        - bearerAuth: []
+      tags:
+        - Gebruikers
       parameters:
-        - name: hypervisor
-          in: path
+        - in: header
+          name: Authorization
           required: true
           schema:
             type: string
-            enum: [proxmox]
+            description: JWT token in formaat `Bearer <token>`
       responses:
-        '200':
-          description: All VMs listed
-        '400':
-          description: Invalid hypervisor
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden – admin only
-        '500':
-          description: Internal server error
+        "200":
+          description: Gebruikersinformatie succesvol opgehaald
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
+        "401":
+          description: Niet geautoriseerd
 
-  /api/{hypervisor}/listvmsuser:
-    get:
-      summary: VMs van gebruiker ophalen
-      description: Geeft de VMs terug die toebehoren aan de ingelogde gebruiker.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: hypervisor
-          in: path
-          required: true
-          schema:
-            type: string
-            enum: [proxmox]
-      responses:
-        '200':
-          description: User VMs listed
-        '400':
-          description: Invalid hypervisor
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
-
-  /api/{hypervisor}/create-server:
+  /api/change-user-info:
     post:
-      summary: VM aanmaken
-      description: Creëer een nieuwe virtuele machine.
+      summary: Gebruikersinformatie wijzigen
+      description: Wijzig de informatie van de ingelogde gebruiker
       security:
         - bearerAuth: []
+      tags:
+        - Gebruikers
       parameters:
-        - name: hypervisor
-          in: path
+        - in: header
+          name: Authorization
           required: true
           schema:
             type: string
-            enum: [proxmox]
+            description: JWT token in formaat `Bearer <token>`
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateServerRequest'
+              $ref: "#/components/schemas/UserInfo"
       responses:
-        '200':
-          description: VM created successfully
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
+        "200":
+          description: Gebruikersinformatie succesvol gewijzigd
+        "400":
+          description: Ongeldige invoer
+        "401":
+          description: Niet geautoriseerd
+        "500":
+          description: Serverfout bij wijzigen gebruiker
 
-  /api/{hypervisor}/delete-server/{vmid}:
-    post:
-      summary: VM verwijderen
-      description: Verwijdert een virtuele machine op basis van ID.
+  /api/{hypervisor}/listallvms:
+    get:
+      summary: Alle virtuele machines ophalen
+      description: Haal een lijst op van alle virtuele machines (alleen toegankelijk voor admins)
       security:
         - bearerAuth: []
+      tags:
+        - Virtuele Machines
       parameters:
-        - name: hypervisor
-          in: path
+        - in: header
+          name: Authorization
           required: true
           schema:
             type: string
-            enum: [proxmox]
-        - name: vmid
-          in: path
+            description: JWT token in formaat `Bearer <token>`
+        - in: path
+          name: hypervisor
+          required: true
+          schema:
+            type: string
+            enum: [proxmox, vmware, xen]
+          description: Type hypervisor
+      responses:
+        "200":
+          description: Lijst van alle virtuele machines succesvol opgehaald
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Lijst van VM's
+        "401":
+          description: Niet geautoriseerd
+        "403":
+          description: Geen admin rechten
+        "400":
+          description: Ongeldige hypervisor parameter
+        "500":
+          description: Serverfout bij ophalen VM's
+
+  /api/{hypervisor}/listvmsuser:
+    get:
+      summary: Gebruiker's virtuele machines ophalen
+      description: Haal een lijst op van alle virtuele machines van de ingelogde gebruiker
+      security:
+        - bearerAuth: []
+      tags:
+        - Virtuele Machines
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+            description: JWT token in formaat `Bearer <token>`
+        - in: path
+          name: hypervisor
+          required: true
+          schema:
+            type: string
+            enum: [proxmox, vmware, xen]
+          description: Type hypervisor
+      responses:
+        "200":
+          description: Lijst van virtuele machines succesvol opgehaald
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Lijst van VM's van gebruiker
+        "401":
+          description: Niet geautoriseerd
+        "400":
+          description: Ongeldige hypervisor parameter
+        "500":
+          description: Serverfout bij ophalen VM's
+
+  /api/{hypervisor}/create-server:
+    post:
+      summary: Nieuwe server aanmaken
+      description: Maak een nieuwe virtuele machine aan
+      security:
+        - bearerAuth: []
+      tags:
+        - Virtuele Machines
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+            description: JWT token in formaat `Bearer <token>`
+        - in: path
+          name: hypervisor
+          required: true
+          schema:
+            type: string
+            enum: [proxmox, vmware, xen]
+          description: Type hypervisor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServerRequest"
+      responses:
+        "200":
+          description: Server succesvol aangemaakt
+        "400":
+          description: Ongeldige invoer
+        "401":
+          description: Niet geautoriseerd
+        "500":
+          description: Serverfout bij aanmaken server
+
+  /api/{hypervisor}/delete-server/{vmid}:
+    post:
+      summary: Server verwijderen
+      description: Verwijder een virtuele machine
+      security:
+        - bearerAuth: []
+      tags:
+        - Virtuele Machines
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+            description: JWT token in formaat `Bearer <token>`
+        - in: path
+          name: hypervisor
+          required: true
+          schema:
+            type: string
+            enum: [proxmox, vmware, xen]
+          description: Type hypervisor
+        - in: path
+          name: vmid
           required: true
           schema:
             type: integer
+          description: ID van de virtuele machine om te verwijderen
       responses:
-        '200':
-          description: VM deleted successfully
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
+        "200":
+          description: Server succesvol verwijderd
+        "401":
+          description: Niet geautoriseerd
+        "403":
+          description: Geen toegang tot deze VM
+        "400":
+          description: Ongeldige VM ID of hypervisor parameter
+        "500":
+          description: Serverfout bij verwijderen server
