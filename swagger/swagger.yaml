@@ -13,6 +13,7 @@ info:
     ```
     Authorization: Bearer <JWT-token>
     ```
+    De JWT-token heb je nodig zodat geen gebruiker zonder inloggegevens toegang heeft tot de API. De JWT is eigenlijk te vergelijken met een user session. Zo wet de API dat je op die route mag komen.
 
 
     ## Productomschrijving
