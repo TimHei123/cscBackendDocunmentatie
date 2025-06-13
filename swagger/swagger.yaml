@@ -7,6 +7,14 @@ info:
 
     Deze backend API ondersteunt selfservice voor studenten om virtuele machines aan te maken, beheren en verwijderen, evenals het bijwerken van gebruikersprofielen.
 
+    ## Authenticatie
+    Alle routes onder `/api/` vereisen authenticatie via een **Bearer-token** in de `Authorization` header. Verkrijg dit token via de `/auth/login` endpoint. Het formaat van de header moet zijn:
+    
+    ```
+    Authorization: Bearer <JWT-token>
+    ```
+
+
     ## Productomschrijving
     Deze API is ontwikkeld voor HBO-ICT studenten die zelfstandig virtuele machines willen beheren via bijvoorbeeld Proxmox of VMware. Het doel is om DevOps-principes te leren zonder afhankelijk te zijn van systeembeheerders.
 
