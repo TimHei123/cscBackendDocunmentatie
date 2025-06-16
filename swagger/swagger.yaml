@@ -252,7 +252,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Ongeldige gebruikersnaam of wachtwoord"
-                code: "AUTH_ERROR"
+                
         "429":
           description: Te veel inlogpogingen
           content:
@@ -270,7 +270,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Interne serverfout bij authenticatie"
-                code: "SERVER_ERROR"
+                
 
   /auth/resetRequest:
     post:
@@ -469,12 +469,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  vmid:
-                    type: integer
-                    description: ID van de aangemaakte VM
-                  status:
-                    type: string
-                    description: Status van de VM
+                  example: 
+                    Message: "VM cloned and configured successfully"
         "400":
           description: Ongeldige invoer
           content:
@@ -483,8 +479,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Ongeldige configuratie voor virtuele machine"
-                field: "memory"
-                code: "VALIDATION_ERROR"
+
         "401":
           description: Niet geautoriseerd
           content:
@@ -493,7 +488,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Ongeldige of verlopen authenticatie token"
-                code: "AUTH_ERROR"
+                
         "403":
           description: Geen toegang tot deze functionaliteit
           content:
@@ -502,7 +497,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Onvoldoende rechten om een VM aan te maken"
-                code: "AUTH_ERROR"
+                
         "409":
           description: Conflict - naam of subdomein bestaat al
           content:
@@ -521,7 +516,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Interne serverfout bij het aanmaken van de VM"
-                code: "SERVER_ERROR"
+                
 
   /api/{hypervisor}/delete-server/{vmid}:
     post:
