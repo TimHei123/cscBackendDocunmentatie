@@ -285,12 +285,81 @@ paths:
   /auth/resetPassword:
     post:
       summary: Wachtwoord resetten
-      description: Voer een wachtwoordreset uit
+      description: |
+        Voer een wachtwoordreset uit met een geldig reset token.
+        
+        Validatie:
+        - Token moet geldig en niet verlopen zijn
+        - Token moet een geldig email adres bevatten
+        - Wachtwoord moet minimaal 8 karakters lang zijn
+        - Wachtwoord moet voldoen aan de LDAP wachtwoord vereisten
+        
+        Mogelijke fouten:
+        - LDAP verbinding mislukt
+        - Gebruiker niet gevonden in LDAP
+        - Wachtwoord reset mislukt in LDAP
       tags:
         - Authenticatie
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Reset token ontvangen via email
+                password:
+                  type: string
+                  description: Nieuw wachtwoord
+                  minLength: 8
+                  maxLength: 128
+              required:
+                - token
+                - password
       responses:
         "200":
           description: Wachtwoord succesvol gereset
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Password has been reset"
+        "400":
+          description: Ongeldige invoer
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Invalid password format"
+        "401":
+          description: Niet geautoriseerd
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Token is invalid"
+        "404":
+          description: Gebruiker niet gevonden
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "No entries found for user with SID"
+        "500":
+          description: Serverfout bij wijzigen wachtwoord
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                ldapConnection:
+                  value: "Failed to connect to LDAP server"
+                ldapSearch:
+                  value: "Failed to search LDAP server"
+                ldapModify:
+                  value: "Failed to reset password in LDAP"
 
   /api/get-user-info:
     get:
@@ -316,6 +385,8 @@ paths:
                 $ref: "#/components/schemas/UserInfo"
         "401":
           description: Niet geautoriseerd
+        "500":
+          description: Serverfout bij ophaalen gebruiker
 
   /api/change-user-info:
     post:
