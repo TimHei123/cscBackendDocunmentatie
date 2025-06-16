@@ -469,8 +469,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  example: 
-                    Message: "VM cloned and configured successfully"
+                  Message:
+                    type: string
+                    description: Bericht van de server
+              example: 
+                Message: "VM cloned and configured successfully"
+
         "400":
           description: Ongeldige invoer
           content:
