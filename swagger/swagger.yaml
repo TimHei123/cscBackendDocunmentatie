@@ -378,6 +378,63 @@ paths:
               schema:
                 type: object
                 description: Lijst van VM's
+              example:
+                [ {
+                  cpu: 0,
+                  cpus: 2,
+                  diskread: 0,
+                  diskwrite: 0,
+                  maxmem: 2147483648,
+                  mem: 1394941529,
+                  name: 'testmax',
+                  netin: 7812950065,
+                  netout: 8714316,
+                  node: '',
+                  status: 'running',
+                  vmid: 114
+                },
+                {
+                  cpu: 0,
+                  cpus: 2,
+                  diskread: 0,
+                  diskwrite: 0,
+                  maxmem: 2147483648,
+                  mem: 0,
+                  name: 'testtimon',
+                  netin: 0,
+                  netout: 0,
+                  node: '',
+                  status: 'stopped',
+                  vmid: 116
+                },
+                {
+                  cpu: 0,
+                  cpus: 1,
+                  diskread: 0,
+                  diskwrite: 0,
+                  maxmem: 1073741824,
+                  mem: 0,
+                  name: 'test',
+                  netin: 0,
+                  netout: 0,
+                  node: '',
+                  status: 'stopped',
+                  vmid: 127
+                },
+                {
+                  cpu: 0,
+                  cpus: 2,
+                  diskread: 0,
+                  diskwrite: 0,
+                  maxmem: 2147483648,
+                  mem: 0,
+                  name: 'test',
+                  netin: 0,
+                  netout: 0,
+                  node: '',
+                  status: 'stopped',
+                  vmid: 112
+                }]
         "401":
           description: Niet geautoriseerd
         "403":
