@@ -188,8 +188,8 @@ paths:
         Authenticeer een gebruiker en genereer een JWT token.
         
         Validatie:
-        - Gebruikersnaam moet een geldig studentnummer zijn (8 cijfers)
-        - Wachtwoord moet minimaal 8 karakters lang zijn
+        - Gebruikersnaam moet een geldig studentnummer zijn
+        - Wachtwoord moet correct zijn
       tags:
         - Authenticatie
       requestBody:
@@ -202,12 +202,9 @@ paths:
                 username:
                   type: string
                   description: Gebruikersnaam (studentnummer)
-                  pattern: '^[0-9]{8}$'
                 password:
                   type: string
                   description: Wachtwoord
-                  minLength: 8
-                  maxLength: 128
               required:
                 - username
                 - password
@@ -222,55 +219,29 @@ paths:
                   token:
                     type: string
                     description: JWT token voor authenticatie
-                  expires_in:
-                    type: integer
-                    description: Aantal seconden tot het token verloopt
                   user:
                     type: object
                     properties:
-                      student_id:
+                      name:
                         type: string
-                        description: Studentnummer
-                      email:
-                        type: string
-                        description: Email adres
-        "400":
-          description: Ongeldige invoer
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Ongeldige gebruikersnaam of wachtwoord formaat"
-                field: "username"
-                code: "VALIDATION_ERROR"
+                        description: Volledige naam van de gebruiker
+                      is_admin:
+                        type: boolean
+                        description: Of de gebruiker admin rechten heeft
         "401":
           description: Ongeldige inloggegevens
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Ongeldige gebruikersnaam of wachtwoord"
-                
-        "429":
-          description: Te veel inlogpogingen
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Te veel inlogpogingen, probeer het later opnieuw"
-                code: "RATE_LIMIT_ERROR"
+                type: string
+              example: "Username or password incorrect"
         "500":
           description: Serverfout
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Interne serverfout bij authenticatie"
-                
+                type: string
+              example: "Login failed"
 
   /auth/resetRequest:
     post:
@@ -422,7 +393,11 @@ paths:
   /api/{hypervisor}/listallvms:
     get:
       summary: Alle virtuele machines ophalen
-      description: Haal een lijst op van alle virtuele machines (alleen toegankelijk voor admins)
+      description: |
+        Haal een lijst op van alle virtuele machines (alleen toegankelijk voor admins).
+        
+        Ondersteunde hypervisors:
+        - proxmox
       security:
         - bearerAuth: []
       tags:
@@ -433,13 +408,13 @@ paths:
           required: true
           schema:
             type: string
-            description: JWT token in formaat `Bearer <token>`
+            description: JWT token in formaat Bearer <token>
         - in: path
           name: hypervisor
           required: true
           schema:
             type: string
-            enum: [proxmox, vmware, xen]
+            enum: [proxmox]
           description: Type hypervisor
       responses:
         "200":
@@ -508,17 +483,45 @@ paths:
                 }]
         "401":
           description: Niet geautoriseerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid JWT token"
         "403":
           description: Geen admin rechten
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "You do not have permission to access this resource"
         "400":
           description: Ongeldige hypervisor parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Unknown hypervisor: proxmox"
         "500":
           description: Serverfout bij ophalen VM's
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Failed to parse JSON"
 
   /api/{hypervisor}/listvmsuser:
     get:
       summary: Gebruiker's virtuele machines ophalen
-      description: Haal een lijst op van alle virtuele machines van de ingelogde gebruiker
+      description: |
+        Haal een lijst op van alle virtuele machines van de ingelogde gebruiker.
+        
+        Ondersteunde hypervisors:
+        - proxmox
       security:
         - bearerAuth: []
       tags:
@@ -529,13 +532,13 @@ paths:
           required: true
           schema:
             type: string
-            description: JWT token in formaat `Bearer <token>`
+            description: JWT token in formaat Bearer <token>
         - in: path
           name: hypervisor
           required: true
           schema:
             type: string
-            enum: [proxmox, vmware, xen]
+            enum: [proxmox]
           description: Type hypervisor
       responses:
         "200":
@@ -562,10 +565,39 @@ paths:
 
         "401":
           description: Niet geautoriseerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid JWT token"
         "400":
           description: Ongeldige hypervisor parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Unknown hypervisor: proxmox"
         "500":
           description: Serverfout bij ophalen VM's
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                dbConnection:
+                  value:
+                    error: "Database connection error"
+                dbQuery:
+                  value:
+                    error: "DB query error"
+                dbScan:
+                  value:
+                    error: "DB scan error"
+                dbRows:
+                  value:
+                    error: "DB rows error"
 
   /api/{hypervisor}/create-server:
     post:
