@@ -1,5 +1,0 @@
-{
-  "sourceNetworks": ["OICT Lokalen", "Students Private IP's"],
-  "services": ["SSH", "HTTP", "HTTPS"],
-  "outboundServices" : ["DNS", "HTTP", "HTTPS", "NTP", "SSH"]
-}
