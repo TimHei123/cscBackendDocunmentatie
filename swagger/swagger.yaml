@@ -45,7 +45,29 @@ info:
     ```
     Authorization: Bearer <JWT-token>
     ```
-    De JWT-token heb je nodig zodat geen gebruiker zonder inloggegevens toegang heeft tot de API. De JWT is eigenlijk te vergelijken met een user session. Zo weet de API dat je op die route mag komen.
+
+    ### Waarom JWT Tokens?
+    JWT (JSON Web Token) tokens worden gebruikt om:
+    1. Te verifiëren dat je bent ingelogd
+    2. Je rechten te controleren (student vs admin)
+    3. Je sessie veilig te beheren
+
+    ### Hoe werkt het?
+    1. Log in via `/auth/login` met je studentnummer en wachtwoord
+    2. Je ontvangt een JWT token
+    3. Gebruik dit token in de `Authorization` header voor alle andere API calls
+    4. Het token is 72 uur geldig
+
+    ### Voorbeeld
+    ```bash
+    # 1. Inloggen
+    curl -X POST https://api.dev.ikwileenserver.open-ict.hu/auth/login \
+      -d "username=12345678&password=jouw_wachtwoord"
+
+    # 2. Token gebruiken voor API calls
+    curl https://api.dev.ikwileenserver.open-ict.hu/api/get-user-info \
+      -H "Authorization: Bearer <jouw_token>"
+    ```
 
     ## Contact
     <div class="contact-info">
@@ -605,13 +627,38 @@ paths:
       description: |
         Maak een nieuwe virtuele machine aan met de opgegeven configuratie.
         
-        Validatie:
-        - Naam moet uniek zijn en voldoen aan het patroon
-        - Geheugen moet tussen 512MB en 16GB liggen
-        - CPU cores moeten tussen 1 en 8 liggen
-        - Schijfgrootte moet tussen 10GB en 500GB liggen
-        - OS moet een van de ondersteunde besturingssystemen zijn
-        - Subdomein moet uniek zijn en voldoen aan het patroon
+        ### Validatie
+        - **Naam**: Moet uniek zijn, 3-63 karakters, alleen letters, cijfers en streepjes
+        - **Geheugen**: Tussen 512MB en 16GB
+        - **CPU Cores**: Tussen 1 en 8 cores
+        - **Schijfgrootte**: Tussen 10GB en 500GB
+        - **Besturingssysteem**: Moet een van de ondersteunde systemen zijn
+        - **Subdomein**: Moet uniek zijn, 3-63 karakters, alleen kleine letters, cijfers en streepjes
+
+        ### Ondersteunde Besturingssystemen
+        - Ubuntu 22.04
+        - Debian 12
+        - CentOS 9
+        - Windows Server 2022
+
+        ### Foutcodes
+        - **400**: Ongeldige configuratie (bijv. te weinig geheugen of ongeldig OS)
+        - **401**: Niet ingelogd of ongeldig token
+        - **403**: Geen rechten om een VM aan te maken
+        - **409**: Naam of subdomein bestaat al
+        - **500**: Serverfout bij aanmaken VM
+
+        ### Voorbeeld
+        ```json
+        {
+          "name": "mijn-vm",
+          "memory": 2048,
+          "cores": 2,
+          "DiskSize": 50,
+          "os": "Ubuntu 22.04",
+          "subdomain": "mijn-vm"
+        }
+        ```
       security:
         - bearerAuth: []
       tags:
@@ -628,7 +675,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [proxmox, vmware, xen]
+            enum: [proxmox]
           description: Type hypervisor
       requestBody:
         required: true
@@ -636,6 +683,14 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/CreateServerRequest"
+            example:
+              name: "mijn-vm"
+              memory: 2048
+              cores: 2
+              DiskSize: 50
+              description: "Mijn eerste VM"
+              os: "Ubuntu 22.04"
+              subdomain: "mijn-vm"
       responses:
         "200":
           description: Server succesvol aangemaakt
@@ -644,21 +699,32 @@ paths:
               schema:
                 type: object
                 properties:
-                  Message:
+                  vmid:
+                    type: integer
+                    description: ID van de aangemaakte VM
+                  status:
                     type: string
-                    description: Bericht van de server
-              example: 
-                Message: "VM cloned and configured successfully"
-
+                    description: Status van de VM
+              example:
+                vmid: 123
+                status: "creating"
         "400":
-          description: Ongeldige invoer
+          description: Ongeldige configuratie
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-              example:
-                error: "Ongeldige configuratie voor virtuele machine"
-
+              examples:
+                invalidMemory:
+                  value:
+                    error: "Geheugen moet tussen 512MB en 16GB liggen"
+                    field: "memory"
+                    code: "VALIDATION_ERROR"
+                invalidOS:
+                  value:
+                    error: "Ongeldig besturingssysteem. Kies uit: Ubuntu 22.04, Debian 12, CentOS 9, Windows Server 2022"
+                    field: "os"
+                    code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
           content:
@@ -667,7 +733,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Ongeldige of verlopen authenticatie token"
-                
+                code: "AUTH_ERROR"
         "403":
           description: Geen toegang tot deze functionaliteit
           content:
@@ -676,7 +742,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Onvoldoende rechten om een VM aan te maken"
-                
+                code: "AUTH_ERROR"
         "409":
           description: Conflict - naam of subdomein bestaat al
           content:
@@ -695,7 +761,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Interne serverfout bij het aanmaken van de VM"
-                
+                code: "SERVER_ERROR"
 
   /api/{hypervisor}/delete-server/{vmid}:
     post:
