@@ -417,6 +417,21 @@ paths:
               schema:
                 type: object
                 description: Lijst van VM's van gebruiker
+              example:
+                cpu: 0,
+                description: ''
+                expiresAt: '2025-11-18 07:23:08'
+                ip_address: ''
+                maxcpu: 0
+                maxmem: 2147483648
+                mem: 0
+                name: 'maxtest'
+                selectedOs: ''
+                status: 'stopped'
+                subdomain: ''
+                uptime: 0
+                vmid: 126
+
         "401":
           description: Niet geautoriseerd
         "400":
