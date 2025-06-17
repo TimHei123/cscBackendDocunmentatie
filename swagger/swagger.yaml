@@ -263,7 +263,7 @@ paths:
   /auth/resetRequest:
     post:
       summary: Wachtwoordreset aanvragen
-      description: Vraag een wachtwoordreset aan
+      description: Vraag een wachtwoordreset aan voor het geval dat je je wachtwoord vergeten bent.
       tags:
         - Authenticatie
       responses:
