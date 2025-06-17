@@ -253,17 +253,21 @@ paths:
         "401":
           description: Ongeldige inloggegevens
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-              example: "Username or password incorrect"
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Username or password incorrect"
+                code: "AUTH_ERROR"
         "500":
           description: Serverfout
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-              example: "Login failed"
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Login failed"
+                code: "SERVER_ERROR"
 
   /auth/resetRequest:
     post:
@@ -274,6 +278,25 @@ paths:
       responses:
         "200":
           description: Reset aanvraag succesvol verzonden
+        "400":
+          description: Ongeldige invoer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Invalid email format"
+                field: "email"
+                code: "VALIDATION_ERROR"
+        "500":
+          description: Serverfout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Failed to send reset email"
+                code: "SERVER_ERROR"
 
   /auth/resetPassword:
     post:
@@ -286,11 +309,6 @@ paths:
         - Token moet een geldig email adres bevatten
         - Wachtwoord moet minimaal 8 karakters lang zijn
         - Wachtwoord moet voldoen aan de LDAP wachtwoord vereisten
-        
-        Mogelijke fouten:
-        - LDAP verbinding mislukt
-        - Gebruiker niet gevonden in LDAP
-        - Wachtwoord reset mislukt in LDAP
       tags:
         - Authenticatie
       requestBody:
@@ -322,37 +340,45 @@ paths:
         "400":
           description: Ongeldige invoer
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-              example: "Invalid password format"
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Invalid password format"
+                field: "password"
+                code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-              example: "Token is invalid"
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Token is invalid"
         "404":
           description: Gebruiker niet gevonden
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-              example: "No entries found for user with SID"
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "No entries found for user with SID"
         "500":
           description: Serverfout bij wijzigen wachtwoord
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: "#/components/schemas/Error"
               examples:
                 ldapConnection:
-                  value: "Failed to connect to LDAP server"
+                  value:
+                    error: "Failed to connect to LDAP server"
                 ldapSearch:
-                  value: "Failed to search LDAP server"
+                  value:
+                    error: "Failed to search LDAP server"
                 ldapModify:
-                  value: "Failed to reset password in LDAP"
+                  value:
+                    error: "Failed to reset password in LDAP"
 
   /api/get-user-info:
     get:
@@ -378,8 +404,22 @@ paths:
                 $ref: "#/components/schemas/UserInfo"
         "401":
           description: Niet geautoriseerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid JWT token"
+                code: "AUTH_ERROR"
         "500":
-          description: Serverfout bij ophaalen gebruiker
+          description: Serverfout bij ophalen gebruiker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Failed to get user data"
+                code: "SERVER_ERROR"
 
   /api/change-user-info:
     post:
@@ -405,12 +445,50 @@ paths:
       responses:
         "200":
           description: Gebruikersinformatie succesvol gewijzigd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
         "400":
           description: Ongeldige invoer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalidEmail:
+                  value:
+                    error: "Invalid email value"
+                    field: "email"
+                    code: "VALIDATION_ERROR"
+                invalidStudentId:
+                  value:
+                    error: "Invalid student_id value"
+                    field: "student_id"
+                    code: "VALIDATION_ERROR"
+                invalidHomeIp:
+                  value:
+                    error: "Invalid home_ip value"
+                    field: "home_ip"
+                    code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid JWT token"
+                code: "AUTH_ERROR"
         "500":
           description: Serverfout bij wijzigen gebruiker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Failed to update user data"
+                code: "SERVER_ERROR"
 
   /api/{hypervisor}/listallvms:
     get:
@@ -460,48 +538,6 @@ paths:
                   node: '',
                   status: 'running',
                   vmid: 114
-                },
-                {
-                  cpu: 0,
-                  cpus: 2,
-                  diskread: 0,
-                  diskwrite: 0,
-                  maxmem: 2147483648,
-                  mem: 0,
-                  name: 'testtimon',
-                  netin: 0,
-                  netout: 0,
-                  node: '',
-                  status: 'stopped',
-                  vmid: 116
-                },
-                {
-                  cpu: 0,
-                  cpus: 1,
-                  diskread: 0,
-                  diskwrite: 0,
-                  maxmem: 1073741824,
-                  mem: 0,
-                  name: 'test',
-                  netin: 0,
-                  netout: 0,
-                  node: '',
-                  status: 'stopped',
-                  vmid: 127
-                },
-                {
-                  cpu: 0,
-                  cpus: 2,
-                  diskread: 0,
-                  diskwrite: 0,
-                  maxmem: 2147483648,
-                  mem: 0,
-                  name: 'test',
-                  netin: 0,
-                  netout: 0,
-                  node: '',
-                  status: 'stopped',
-                  vmid: 112
                 }]
         "401":
           description: Niet geautoriseerd
@@ -527,6 +563,8 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Unknown hypervisor: proxmox"
+                field: "hypervisor"
+                code: "VALIDATION_ERROR"
         "500":
           description: Serverfout bij ophalen VM's
           content:
@@ -584,7 +622,6 @@ paths:
                 subdomain: ''
                 uptime: 0
                 vmid: 126
-
         "401":
           description: Niet geautoriseerd
           content:
@@ -601,6 +638,8 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Unknown hypervisor: proxmox"
+                field: "hypervisor"
+                code: "VALIDATION_ERROR"
         "500":
           description: Serverfout bij ophalen VM's
           content:
@@ -640,25 +679,6 @@ paths:
         - Debian 12
         - CentOS 9
         - Windows Server 2022
-
-        ### Foutcodes
-        - **400**: Ongeldige configuratie (bijv. te weinig geheugen of ongeldig OS)
-        - **401**: Niet ingelogd of ongeldig token
-        - **403**: Geen rechten om een VM aan te maken
-        - **409**: Naam of subdomein bestaat al
-        - **500**: Serverfout bij aanmaken VM
-
-        ### Voorbeeld
-        ```json
-        {
-          "name": "mijn-vm",
-          "memory": 2048,
-          "cores": 2,
-          "DiskSize": 50,
-          "os": "Ubuntu 22.04",
-          "subdomain": "mijn-vm"
-        }
-        ```
       security:
         - bearerAuth: []
       tags:
@@ -734,15 +754,6 @@ paths:
               example:
                 error: "Ongeldige of verlopen authenticatie token"
                 code: "AUTH_ERROR"
-        "403":
-          description: Geen toegang tot deze functionaliteit
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Onvoldoende rechten om een VM aan te maken"
-                code: "AUTH_ERROR"
         "409":
           description: Conflict - naam of subdomein bestaat al
           content:
@@ -783,7 +794,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [proxmox, vmware, xen]
+            enum: [proxmox]
           description: Type hypervisor
         - in: path
           name: vmid
@@ -794,11 +805,60 @@ paths:
       responses:
         "200":
           description: Server succesvol verwijderd
-        "401":
-          description: Niet geautoriseerd
-        "403":
-          description: Geen toegang tot deze VM
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Status van de verwijdering
+              example:
+                status: "deleted"
         "400":
           description: Ongeldige VM ID of hypervisor parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Invalid VM ID"
+                field: "vmid"
+                code: "VALIDATION_ERROR"
+        "401":
+          description: Niet geautoriseerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "invalid JWT token"
+                code: "AUTH_ERROR"
+        "403":
+          description: Geen toegang tot deze VM
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "You do not have permission to delete this VM"
+                code: "AUTH_ERROR"
+        "404":
+          description: VM niet gevonden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "VM not found"
+                field: "vmid"
+                code: "NOT_FOUND"
         "500":
           description: Serverfout bij verwijderen server
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Failed to delete VM"
+                code: "SERVER_ERROR"
