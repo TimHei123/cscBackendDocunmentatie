@@ -101,13 +101,6 @@ components:
         error:
           type: string
           description: Error message
-        field:
-          type: string
-          description: Field that caused the error (if applicable)
-        code:
-          type: string
-          description: Error code for programmatic handling
-          enum: [VALIDATION_ERROR, AUTH_ERROR, NOT_FOUND, CONFLICT, SERVER_ERROR]
 
     LoginRequest:
       type: object
@@ -258,7 +251,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Username or password incorrect"
-                code: "AUTH_ERROR"
         "500":
           description: Serverfout
           content:
@@ -267,7 +259,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Login failed"
-                code: "SERVER_ERROR"
 
   /auth/resetRequest:
     post:
@@ -286,8 +277,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Invalid email format"
-                field: "email"
-                code: "VALIDATION_ERROR"
         "500":
           description: Serverfout
           content:
@@ -296,7 +285,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Failed to send reset email"
-                code: "SERVER_ERROR"
 
   /auth/resetPassword:
     post:
@@ -345,8 +333,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Invalid password format"
-                field: "password"
-                code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
           content:
@@ -410,7 +396,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "invalid JWT token"
-                code: "AUTH_ERROR"
         "500":
           description: Serverfout bij ophalen gebruiker
           content:
@@ -419,7 +404,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Failed to get user data"
-                code: "SERVER_ERROR"
 
   /api/change-user-info:
     post:
@@ -459,18 +443,12 @@ paths:
                 invalidEmail:
                   value:
                     error: "Invalid email value"
-                    field: "email"
-                    code: "VALIDATION_ERROR"
                 invalidStudentId:
                   value:
                     error: "Invalid student_id value"
-                    field: "student_id"
-                    code: "VALIDATION_ERROR"
                 invalidHomeIp:
                   value:
                     error: "Invalid home_ip value"
-                    field: "home_ip"
-                    code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
           content:
@@ -479,7 +457,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "invalid JWT token"
-                code: "AUTH_ERROR"
         "500":
           description: Serverfout bij wijzigen gebruiker
           content:
@@ -488,7 +465,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Failed to update user data"
-                code: "SERVER_ERROR"
 
   /api/{hypervisor}/listallvms:
     get:
@@ -563,8 +539,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Unknown hypervisor: proxmox"
-                field: "hypervisor"
-                code: "VALIDATION_ERROR"
         "500":
           description: Serverfout bij ophalen VM's
           content:
@@ -738,13 +712,9 @@ paths:
                 invalidMemory:
                   value:
                     error: "Geheugen moet tussen 512MB en 16GB liggen"
-                    field: "memory"
-                    code: "VALIDATION_ERROR"
                 invalidOS:
                   value:
                     error: "Ongeldig besturingssysteem. Kies uit: Ubuntu 22.04, Debian 12, CentOS 9, Windows Server 2022"
-                    field: "os"
-                    code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
           content:
@@ -753,7 +723,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Ongeldige of verlopen authenticatie token"
-                code: "AUTH_ERROR"
         "409":
           description: Conflict - naam of subdomein bestaat al
           content:
@@ -762,8 +731,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "VM naam of subdomein is al in gebruik"
-                field: "name"
-                code: "CONFLICT"
         "500":
           description: Serverfout bij aanmaken server
           content:
@@ -772,7 +739,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Interne serverfout bij het aanmaken van de VM"
-                code: "SERVER_ERROR"
 
   /api/{hypervisor}/delete-server/{vmid}:
     post:
@@ -823,8 +789,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Invalid VM ID"
-                field: "vmid"
-                code: "VALIDATION_ERROR"
         "401":
           description: Niet geautoriseerd
           content:
@@ -833,7 +797,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "invalid JWT token"
-                code: "AUTH_ERROR"
         "403":
           description: Geen toegang tot deze VM
           content:
@@ -842,7 +805,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "You do not have permission to delete this VM"
-                code: "AUTH_ERROR"
         "404":
           description: VM niet gevonden
           content:
@@ -851,8 +813,6 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "VM not found"
-                field: "vmid"
-                code: "NOT_FOUND"
         "500":
           description: Serverfout bij verwijderen server
           content:
@@ -861,4 +821,3 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Failed to delete VM"
-                code: "SERVER_ERROR"
