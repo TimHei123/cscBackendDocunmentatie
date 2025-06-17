@@ -294,7 +294,7 @@ paths:
         
         Validatie:
         - Token moet geldig en niet verlopen zijn
-        - Token moet een geldig email adres bevatten
+        - Token moet aan een geldig email adres gekoppeld zijn	
         - Wachtwoord moet minimaal 8 karakters lang zijn
         - Wachtwoord moet voldoen aan de LDAP wachtwoord vereisten
       tags:
