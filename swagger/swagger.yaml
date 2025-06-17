@@ -200,11 +200,23 @@ paths:
     post:
       summary: Inloggen
       description: |
-        Authenticeer een gebruiker en genereer een JWT token.
+        Authenticeer een gebruiker en genereer een JWT token voor toegang tot de API.
         
-        Validatie:
-        - Gebruikersnaam moet een geldig studentnummer zijn
-        - Wachtwoord moet correct zijn
+        ### Validatie
+        - Gebruikersnaam moet een geldig studentnummer zijn (8 cijfers)
+        - Wachtwoord moet correct zijn en voldoen aan de LDAP vereisten
+        - Na 3 mislukte pogingen wordt het account tijdelijk geblokkeerd
+        
+        ### Response
+        Bij succesvolle authenticatie ontvang je:
+        - Een JWT token voor gebruik in de Authorization header
+        - Je volledige naam
+        - Je admin status
+        
+        ### Veiligheid
+        - Het token is 72 uur geldig
+        - Het token bevat je studentnummer, naam en admin status
+        - Alle API calls moeten dit token gebruiken in de Authorization header
       tags:
         - Authenticatie
       requestBody:
@@ -263,8 +275,16 @@ paths:
   /auth/resetRequest:
     post:
       summary: Wachtwoordreset aanvragen
-      description: Vraag een wachtwoordreset aan voor het geval dat je je wachtwoord vergeten bent.
-      tags:
+      description: |
+        Vraag een wachtwoordreset aan voor het geval dat je je wachtwoord vergeten bent.
+        
+        ### Proces
+        1. Je vult je email adres in
+        2. Het systeem controleert of dit email adres gekoppeld is aan een account
+        3. Als het email adres gevonden wordt, ontvang je een reset link
+        4. De reset link is 24 uur geldig
+      
+        tags:
         - Authenticatie
       responses:
         "200":
@@ -292,11 +312,24 @@ paths:
       description: |
         Voer een wachtwoordreset uit met een geldig reset token.
         
-        Validatie:
-        - Token moet geldig en niet verlopen zijn
-        - Token moet aan een geldig email adres gekoppeld zijn	
+        ### Validatie
+        - Token moet geldig en niet verlopen zijn (max 24 uur oud)
+        - Token moet aan een geldig email adres gekoppeld zijn
         - Wachtwoord moet minimaal 8 karakters lang zijn
-        - Wachtwoord moet voldoen aan de LDAP wachtwoord vereisten
+        - Wachtwoord moet voldoen aan de LDAP wachtwoord vereisten:
+          - Minimaal 8 karakters
+          - Minimaal 1 hoofdletter
+          - Minimaal 1 kleine letter
+          - Minimaal 1 cijfer
+          - Minimaal 1 speciaal teken
+        
+        ### Proces
+        1. Je ontvangt een reset link via email
+        2. Klik op de link om naar de reset pagina te gaan
+        3. Voer je nieuwe wachtwoord in
+        4. Na succesvolle reset kun je inloggen met je nieuwe wachtwoord
+        
+
       tags:
         - Authenticatie
       requestBody:
@@ -369,9 +402,21 @@ paths:
   /api/get-user-info:
     get:
       summary: Gebruikersinformatie ophalen
-      description: Haal de informatie op van de ingelogde gebruiker
-      security:
-        - bearerAuth: []
+      description: |
+        Haal de informatie op van de ingelogde gebruiker.
+        
+        ### Beschikbare Informatie
+        - Email adres
+        - Studentnummer
+        - IP adres van de gebruiker
+        
+        ### Veiligheid
+        - Alleen toegankelijk met een geldig JWT token
+        - Je kunt alleen je eigen informatie ophalen
+        - Admins kunnen ook informatie van andere gebruikers ophalen
+        
+        ### Opmerking
+        Het IP adres wordt gebruikt voor beveiligingsdoeleinden en om te controleren of je toegang hebt tot de virtuele machines.
       tags:
         - Gebruikers
       parameters:
@@ -408,9 +453,22 @@ paths:
   /api/change-user-info:
     post:
       summary: Gebruikersinformatie wijzigen
-      description: Wijzig de informatie van de ingelogde gebruiker
-      security:
-        - bearerAuth: []
+      description: |
+        Wijzig de informatie van de ingelogde gebruiker.
+        
+        ### Beschikbare Velden
+        - Email adres: Moet een geldig email formaat hebben
+        - Studentnummer: Je eigen studentnummer
+        - IP adres: Moet een IPv4 adres zijn
+       
+        
+        ### Veiligheid
+        - Alleen toegankelijk met een geldig JWT token
+        - Je kunt alleen je eigen informatie wijzigen
+        - Admins kunnen ook informatie van andere gebruikers wijzigen
+        
+        ### Opmerking
+        Wijzigingen aan het IP adres kunnen invloed hebben op je toegang tot de virtuele machines.
       tags:
         - Gebruikers
       parameters:
@@ -472,10 +530,26 @@ paths:
       description: |
         Haal een lijst op van alle virtuele machines (alleen toegankelijk voor admins).
         
-        Ondersteunde hypervisors:
+        ### Beschikbare Informatie
+        - VM ID
+        - Naam
+        - Status (running, stopped, etc.)
+        - CPU gebruik
+        - Geheugen gebruik
+        - Schijf gebruik
+        - Netwerk gebruik
+        - Node informatie
+        
+        ### Veiligheid
+        - Alleen toegankelijk met een geldig JWT token
+        - Alleen admins hebben toegang tot deze endpoint
+        - Alle VM's van alle gebruikers zijn zichtbaar
+        
+        ### Ondersteunde Hypervisors
         - proxmox
-      security:
-        - bearerAuth: []
+        
+        ### Opmerking
+        Deze endpoint is bedoeld voor systeembeheerders om een overzicht te krijgen van alle virtuele machines in het systeem.
       tags:
         - Virtuele Machines
       parameters:
@@ -554,10 +628,28 @@ paths:
       description: |
         Haal een lijst op van alle virtuele machines van de ingelogde gebruiker.
         
-        Ondersteunde hypervisors:
+        ### Beschikbare Informatie
+        - VM ID
+        - Naam
+        - Status
+        - CPU gebruik
+        - Geheugen gebruik
+        - Schijf gebruik
+        - Netwerk gebruik
+        - Verloopdatum
+        - Subdomein
+        - IP adres
+        
+        ### Veiligheid
+        - Alleen toegankelijk met een geldig JWT token
+        - Je kunt alleen je eigen VM's zien
+        - Admins kunnen ook VM's van andere gebruikers zien
+        
+        ### Ondersteunde Hypervisors
         - proxmox
-      security:
-        - bearerAuth: []
+        
+        ### Opmerking
+        De verloopdatum geeft aan wanneer je VM automatisch wordt verwijderd als je deze niet verlengt.
       tags:
         - Virtuele Machines
       parameters:
@@ -641,20 +733,57 @@ paths:
         Maak een nieuwe virtuele machine aan met de opgegeven configuratie.
         
         ### Validatie
-        - **Naam**: Moet uniek zijn, 3-63 karakters, alleen letters, cijfers en streepjes
-        - **Geheugen**: Tussen 512MB en 16GB
-        - **CPU Cores**: Tussen 1 en 8 cores
-        - **Schijfgrootte**: Tussen 10GB en 500GB
-        - **Besturingssysteem**: Moet een van de ondersteunde systemen zijn
-        - **Subdomein**: Moet uniek zijn, 3-63 karakters, alleen kleine letters, cijfers en streepjes
-
+        - **Naam**: 
+          - Moet uniek zijn
+          - 3-63 karakters
+          - Alleen letters, cijfers en streepjes
+          - Moet beginnen met een letter
+        - **Geheugen**: 
+          - Tussen 512MB en 16GB
+          - Moet een veelvoud van 512MB zijn
+        - **CPU Cores**: 
+          - Tussen 1 en 8 cores
+          - Moet een geheel getal zijn
+        - **Schijfgrootte**: 
+          - Tussen 10GB en 500GB
+          - Moet een geheel getal zijn
+        - **Besturingssysteem**: 
+          - Moet een van de ondersteunde systemen zijn
+          - Verschillende systemen hebben verschillende minimum vereisten
+        - **Subdomein**: 
+          - Moet uniek zijn
+          - 3-63 karakters
+          - Alleen kleine letters, cijfers en streepjes
+          - Moet beginnen met een letter
+        
         ### Ondersteunde Besturingssystemen
         - Ubuntu 22.04
+          - Minimum: 1 core, 1GB RAM, 10GB schijf
+          - Aanbevolen: 2 cores, 2GB RAM, 20GB schijf
         - Debian 12
+          - Minimum: 1 core, 1GB RAM, 10GB schijf
+          - Aanbevolen: 2 cores, 2GB RAM, 20GB schijf
         - CentOS 9
+          - Minimum: 1 core, 1GB RAM, 10GB schijf
+          - Aanbevolen: 2 cores, 2GB RAM, 20GB schijf
         - Windows Server 2022
-      security:
-        - bearerAuth: []
+          - Minimum: 2 cores, 4GB RAM, 30GB schijf
+          - Aanbevolen: 4 cores, 8GB RAM, 50GB schijf
+        
+        ### Veiligheid
+        - Alleen toegankelijk met een geldig JWT token
+        - Je kunt maximaal 5 VM's aanmaken
+        - VM's worden automatisch verwijderd na 30 dagen
+        - Je kunt de VM verlengen voor nog 30 dagen
+        
+        ### Proces
+        1. De VM wordt aangemaakt met de opgegeven configuratie
+        2. Het besturingssysteem wordt geïnstalleerd
+        3. De VM wordt gestart
+        4. Je ontvangt de inloggegevens via email
+        
+        ### Opmerking
+        Het aanmaken van een VM kan enkele minuten duren, afhankelijk van de gekozen configuratie en het besturingssysteem.
       tags:
         - Virtuele Machines
       parameters:
@@ -743,9 +872,25 @@ paths:
   /api/{hypervisor}/delete-server/{vmid}:
     post:
       summary: Server verwijderen
-      description: Verwijder een virtuele machine
-      security:
-        - bearerAuth: []
+      description: |
+        Verwijder een virtuele machine.
+        
+        ### Proces
+        1. De VM wordt gestopt
+        2. Alle gegevens worden permanent verwijderd
+        3. De resources worden vrijgegeven
+        
+        ### Veiligheid
+        - Alleen toegankelijk met een geldig JWT token
+        - Je kunt alleen je eigen VM's verwijderen
+        - Admins kunnen alle VM's verwijderen
+        - De actie kan niet ongedaan worden gemaakt
+        
+        ### Ondersteunde Hypervisors
+        - proxmox
+        
+        ### Opmerking
+        Zorg ervoor dat je alle belangrijke gegevens hebt gebackupped voordat je een VM verwijdert. Deze actie kan niet ongedaan worden gemaakt.
       tags:
         - Virtuele Machines
       parameters:
@@ -754,70 +899,4 @@ paths:
           required: true
           schema:
             type: string
-            description: JWT token in formaat `Bearer <token>`
-        - in: path
-          name: hypervisor
-          required: true
-          schema:
-            type: string
-            enum: [proxmox]
-          description: Type hypervisor
-        - in: path
-          name: vmid
-          required: true
-          schema:
-            type: integer
-          description: ID van de virtuele machine om te verwijderen
-      responses:
-        "200":
-          description: Server succesvol verwijderd
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    description: Status van de verwijdering
-              example:
-                status: "deleted"
-        "400":
-          description: Ongeldige VM ID of hypervisor parameter
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Invalid VM ID"
-        "401":
-          description: Niet geautoriseerd
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "invalid JWT token"
-        "403":
-          description: Geen toegang tot deze VM
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "You do not have permission to delete this VM"
-        "404":
-          description: VM niet gevonden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "VM not found"
-        "500":
-          description: Serverfout bij verwijderen server
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                error: "Failed to delete VM"
+            description: JWT token in formaat `
